@@ -12,6 +12,10 @@ import tiktoken
 import time
 import atexit
 import sys
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
 from typing import Union
 from dataclasses import dataclass
 
@@ -23,6 +27,7 @@ class LLM_TYPES(Enum):
     OPENAI = "openai"
     OLLAMA_REASONING = "ollama-reasoning"
     OPENAI_REASONING = "openai-reasoning"
+    CODEX = "codex"
 
 
 @dataclass
@@ -476,6 +481,109 @@ class OpenAIClient(LLMClient):
                 completion.usage.prompt_tokens,
                 completion.usage.completion_tokens,
             )
+
+
+class CodexClient(LLMClient):
+    """LLM client backed by the non-interactive Codex CLI."""
+
+    def __init__(
+        self,
+        command: str = "codex",
+        model: str = "",
+        profile: str = "",
+        working_directory: str = "",
+        timeout: int = 600,
+        retry_times: int = 3,
+    ):
+        self.command = command
+        self.model = model
+        self.profile = profile
+        self.working_directory = working_directory or None
+        self.timeout = timeout
+        self.retry_times = retry_times
+
+        if shutil.which(command) is None:
+            raise ValueError(f"Codex CLI executable not found: {command}")
+        if self.working_directory and not Path(self.working_directory).is_dir():
+            raise ValueError(
+                f"Codex working directory does not exist: {self.working_directory}"
+            )
+        super().__init__()
+
+    @staticmethod
+    def _build_prompt(messages: list[dict[str, str]]) -> str:
+        """Serialize chat messages without losing their role boundaries."""
+        parts = [
+            "Respond to the following conversation. Return only the assistant's answer."
+        ]
+        for message in messages:
+            role = message.get("role", "user").upper()
+            parts.append(f"<{role}>\n{message.get('content', '')}\n</{role}>")
+        parts.append("<ASSISTANT>")
+        return "\n\n".join(parts)
+
+    @LLMClient.with_retry
+    @LLMClient.query_logger.with_log
+    def query_with_messages(
+        self, messages: list[dict[str, str]], return_tokens: bool = False
+    ) -> Union[str, tuple[str, int, int], None]:
+        output_path = None
+        try:
+            with tempfile.NamedTemporaryFile(prefix="promefuzz-codex-", delete=False) as f:
+                output_path = f.name
+
+            command = [
+                self.command,
+                "exec",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--color",
+                "never",
+                "--output-last-message",
+                output_path,
+            ]
+            if self.model:
+                command.extend(["--model", self.model])
+            if self.profile:
+                command.extend(["--profile", self.profile])
+            command.append("-")
+
+            result = subprocess.run(
+                command,
+                input=self._build_prompt(messages),
+                text=True,
+                capture_output=True,
+                cwd=self.working_directory,
+                timeout=self.timeout,
+                check=False,
+            )
+            if result.returncode != 0:
+                error = result.stderr.strip() or result.stdout.strip()
+                logger.error(f"Codex CLI exited with code {result.returncode}: {error}")
+                return None
+
+            response = Path(output_path).read_text(encoding="utf-8").strip()
+            if not response:
+                logger.error("Codex CLI returned an empty response")
+                return None
+        except subprocess.TimeoutExpired:
+            logger.error(f"Codex CLI query timed out after {self.timeout} seconds")
+            return None
+        except (OSError, UnicodeError) as e:
+            logger.error(f"Codex CLI exception: {e}")
+            return None
+        finally:
+            if output_path:
+                Path(output_path).unlink(missing_ok=True)
+
+        if not return_tokens:
+            return response
+        return (
+            response,
+            OllamaClient.count_tokens(messages),
+            OllamaClient.count_tokens(response),
+        )
 
 
 class OllamaClient(LLMClient):

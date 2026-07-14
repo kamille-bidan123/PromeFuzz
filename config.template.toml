@@ -168,7 +168,7 @@ enable_log = true
 # [MODIFY THIS] Your custom llm name.
 [llm.cloud_llm]
 
-# The llm type, currently support "ollama", "openai", "ollama-reasoning", "openai-reasoning"
+# The llm type, currently supports "ollama", "openai", "ollama-reasoning", "openai-reasoning", "codex"
 llm_type = "openai"
 
 # The base url for the openai api.
@@ -192,12 +192,32 @@ timeout = 80
 # The maximum retry times for each query.
 retry_times = 3
 
+# ------------- Configuration for LLM via Codex CLI -------------
+
+[llm.codex_cli]
+
+# Uses the authentication configured by `codex login`; no API key is required here.
+llm_type = "codex"
+
+# Codex executable name or absolute path.
+command = "codex"
+
+# Optional model/profile overrides. Empty values use Codex CLI defaults.
+model = ""
+profile = ""
+
+# Optional directory exposed to Codex as read-only context. Empty uses PromeFuzz's cwd.
+working_directory = ""
+
+timeout = 600
+retry_times = 3
+
 # ------------- Configuration for LLM 2 (Local LLM) -------------
 
 # [MODIFY THIS] Your custom llm name.
 [llm.local_llm]
 
-# The llm type, currently support "ollama", "openai", "ollama-reasoning", "openai-reasoning"
+# The llm type, currently supports "ollama", "openai", "ollama-reasoning", "openai-reasoning", "codex"
 llm_type = "ollama-reasoning"
 
 # The ollama server host.
@@ -224,7 +244,7 @@ retry_times = 3
 # [MODIFY THIS] Your custom llm name.
 [llm.embedding_llm]
 
-# The llm type, currently support "ollama", "openai", "ollama-reasoning", "openai-reasoning"
+# Embeddings currently support "ollama" and "openai" (not "codex").
 llm_type = "ollama"
 
 # The ollama server host.

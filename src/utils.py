@@ -161,6 +161,18 @@ def setup_llm(llm_name: str) -> LLM.LLMClient:
                 raise ValueError(
                     "OpenAI API key is neither provided nor found in the environment"
                 )
+    elif llm_type == LLM.LLM_TYPES.CODEX.value:
+        selected_llm = deep_merge(
+            {
+                "command": "codex",
+                "model": "",
+                "profile": "",
+                "working_directory": "",
+                "timeout": 600,
+                "retry_times": 3,
+            },
+            selected_llm,
+        )
     else:
         raise ValueError(f"Unsupported LLM type: {llm_type}")
 
@@ -201,6 +213,15 @@ def setup_llm(llm_name: str) -> LLM.LLMClient:
                 selected_llm["model"],
                 selected_llm["temperature"],
                 selected_llm["max_tokens"],
+                selected_llm["timeout"],
+                selected_llm["retry_times"],
+            )
+        case LLM.LLM_TYPES.CODEX.value:
+            llm_client = LLM.CodexClient(
+                selected_llm["command"],
+                selected_llm["model"],
+                selected_llm["profile"],
+                selected_llm["working_directory"],
                 selected_llm["timeout"],
                 selected_llm["retry_times"],
             )

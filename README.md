@@ -175,7 +175,7 @@ default_llm = "deepseek-chat"
 
 # [MODIFY THIS] Your custom llm name.
 [llm.deepseek-chat]
-# The llm type, currently support "ollama", "openai", "ollama-reasoning", "openai-reasoning"
+# Supported types: "ollama", "openai", "ollama-reasoning", "openai-reasoning", "codex"
 llm_type = "openai"
 # The base url for the openai api.
 base_url = "https://api.deepseek.com/v1"
@@ -208,6 +208,27 @@ model = "mxbai-embed-large"
 ```
 
 Once configured, PromeFuzz will use these settings across all stages: comprehension, harness generation, and crash analysis.
+
+##### Using Codex CLI instead of an LLM API
+
+After installing Codex CLI and authenticating with `codex login`, PromeFuzz can invoke it directly without an API key:
+
+```toml
+[llm]
+default_llm = "codex_cli"
+
+[llm.codex_cli]
+llm_type = "codex"
+command = "codex"
+# Optional; empty values use the Codex CLI defaults.
+model = ""
+profile = ""
+working_directory = ""
+timeout = 600
+retry_times = 3
+```
+
+Each query runs as an ephemeral, read-only `codex exec` invocation. The configured Codex account, model access, and profile are reused; Codex CLI is therefore intended for text generation, comprehension, and analysis, while RAG embeddings must still use an `openai` or `ollama` LLM configuration.
 
 ### 2. **Obtain and Build the Library**
 

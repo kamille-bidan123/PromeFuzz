@@ -113,6 +113,15 @@ def display_llm_details(
         click.echo(f"{indent}  Port: {port}")
         click.echo(f"{indent}  Full URL: http://{host}:{port}")
 
+    elif llm_type == "codex":
+        click.echo(f"{indent}")
+        click.echo(f"{indent}Codex CLI Configuration:")
+        click.echo(f"{indent}  Command: {llm_config.get('command', 'codex')}")
+        profile = llm_config.get("profile", "") or "Default"
+        click.echo(f"{indent}  Profile: {profile}")
+        working_directory = llm_config.get("working_directory", "") or "Current"
+        click.echo(f"{indent}  Working Directory: {working_directory}")
+
     # Common configuration
     click.echo(f"{indent}")
     click.echo(f"{indent}Common Settings:")
