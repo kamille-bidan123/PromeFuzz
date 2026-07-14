@@ -288,6 +288,10 @@ class OpenAIRetriever(RAGRetriever):
             api_key=api_key,
             model=model,
             embedding_ctx_length=max_tokens,
+            # Keep inputs as strings for OpenAI-compatible servers that do not
+            # accept the integer token arrays produced by LangChain's local
+            # length checking.
+            check_embedding_ctx_length=False,
             show_progress_bar=True,
         )
         self.vector_store = Chroma(
