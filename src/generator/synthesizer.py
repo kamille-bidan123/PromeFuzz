@@ -355,7 +355,7 @@ def gen_additional_script(primary_build_script_path: Path):
             gcov_compile_args.append(f"-o {str(out_path).replace("_asan", "_gcov")}")
         elif compile_cmd.startswith("-fsanitize=fuzzer"):
             out_arg_flag = False
-            gcov_compile_args.append("--coverage -fsanitize=fuzzer")
+            gcov_compile_args.append("--coverage -fsanitize=fuzzer,address")
         elif out_arg_flag:
             pass
         else:
@@ -373,7 +373,7 @@ def gen_additional_script(primary_build_script_path: Path):
         elif compile_cmd.startswith("-fsanitize=fuzzer"):
             out_arg_flag = False
             cov_compile_args.append(
-                "-fprofile-instr-generate -fcoverage-mapping -fsanitize=fuzzer"
+                "-fprofile-instr-generate -fcoverage-mapping -fsanitize=fuzzer,address"
             )
         elif out_arg_flag:
             pass
