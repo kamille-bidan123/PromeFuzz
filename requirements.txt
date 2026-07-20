@@ -12,10 +12,12 @@ libtmux==0.44.2
 loguru==0.7.2
 markdown==3.7
 matplotlib==3.10.1
+nltk==3.10.0
 ollama==0.4.7
 openai==1.63.2
 openpyxl==3.1.5
 parse==1.20.2
+pypdf==6.14.2
 tiktoken==0.9.0
 tomlkit==0.13.3
 tree-sitter==0.24.0

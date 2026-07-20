@@ -18,7 +18,7 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders import (
     TextLoader,
     UnstructuredMarkdownLoader,
-    UnstructuredPDFLoader,
+    PyPDFLoader,
     UnstructuredHTMLLoader,
 )
 from chromadb import config as chromadb_config
@@ -107,9 +107,7 @@ class RAGRetriever(ABC):
         with ProgressTitle(f"Loading document {document}..."):
             # load the document
             if document.suffix == ".pdf":
-                loader = UnstructuredPDFLoader(
-                    str(document), mode="elements", strategy="fast"
-                )
+                loader = PyPDFLoader(str(document))
                 docs = loader.load()
             elif document.suffix in [".html", ".htm"]:
                 # unstructured requires `str`` while langchain could give `Path`
